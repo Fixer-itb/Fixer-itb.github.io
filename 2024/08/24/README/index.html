@@ -1,0 +1,1002 @@
+
+<!DOCTYPE html><html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="hexo-theme" content="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1" theme-name="Stellar" theme-version="1.29.1">
+  
+  <meta name="generator" content="Hexo 7.3.0">
+  <meta http-equiv='x-dns-prefetch-control' content='on' />
+  
+  <meta name="renderer" content="webkit">
+  <meta name="force-rendering" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
+  <meta name="HandheldFriendly" content="True" >
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000">
+  <meta name="theme-color" content="#f9fafb">
+  
+  <title>Fixer's Blog</title>
+
+  
+    <meta name="description" content="室内行人移动方位推算技术 (Pedestrian Dead Reckoning, PDR)一、问题描述1.1 问题背景室内 GPS 信号受到阻隔，尤其时车库场景无线接入点 AP 较为稀疏，室内定位很难通过 GPS 或位置指纹等技术实现。行人行位推算技术（Pedestrian Dead Reckoning，PDR）可以有效解决这一问题，它利用手机内置传感器收集数据，通过轻量级低功耗算法运行框架和技术">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fixer&#39;s Blog">
+<meta property="og:url" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/index.html">
+<meta property="og:site_name" content="Fixer&#39;s Blog">
+<meta property="og:description" content="室内行人移动方位推算技术 (Pedestrian Dead Reckoning, PDR)一、问题描述1.1 问题背景室内 GPS 信号受到阻隔，尤其时车库场景无线接入点 AP 较为稀疏，室内定位很难通过 GPS 或位置指纹等技术实现。行人行位推算技术（Pedestrian Dead Reckoning，PDR）可以有效解决这一问题，它利用手机内置传感器收集数据，通过轻量级低功耗算法运行框架和技术">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/2022-12-01-15-09-28.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/example.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/2022-12-01-20-00-32.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/2022-12-01-20-25-35.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/2022-12-01-21-04-19.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/2022-12-01-21-42-15.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/2022-12-01-18-58-24.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/2022-12-01-18-50-15.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/2022-12-01-18-50-28.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/lowpass.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/2022-12-01-21-04-40.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/2022-12-01-21-20-00.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/test_case0.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/walk.png">
+<meta property="og:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/ride.png">
+<meta property="article:published_time" content="2024-08-24T04:19:57.141Z">
+<meta property="article:modified_time" content="2024-03-29T17:18:40.217Z">
+<meta property="article:author" content="Shawn Guy">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://fixer-itb.github.io/Fixer-itb/2024/08/24/README/images/2022-12-01-15-09-28.png">
+  
+  
+  
+  
+
+  <!-- feed -->
+  
+
+  <link rel="stylesheet" href="/css/main.css?v=1.29.1">
+
+  
+
+  
+
+  
+</head>
+<body>
+
+<div class="l_body s:aa content tech" id="start" layout="post" ><aside class="l_left"><div class="leftbar-container">
+
+
+<header class="header"><div class="logo-wrap"><a class="avatar" href="/Fixer-itb/about/"><div class="bg" style="opacity:0;background-image:url(https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/rainbow64@3x.webp);"></div><img no-lazy class="avatar" src="undefined" onerror="javascript:this.classList.add('error');this.src='https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/image/2659360.svg';"></a><a class="title" href="/Fixer-itb/"><div class="main" ff="title">Fixer's Blog</div></a></div></header>
+
+<div class="nav-area">
+<div class="search-wrapper" id="search-wrapper"><form class="search-form"><a class="search-button" onclick="document.getElementById(&quot;search-input&quot;).focus();"><svg t="1705074644177" viewBox="0 0 1025 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="1560" width="200" height="200"><path d="M1008.839137 935.96571L792.364903 719.491476a56.783488 56.783488 0 0 0-80.152866 0 358.53545 358.53545 0 1 1 100.857314-335.166073 362.840335 362.840335 0 0 1-3.689902 170.145468 51.248635 51.248635 0 1 0 99.217358 26.444296 462.057693 462.057693 0 1 0-158.255785 242.303546l185.930047 185.725053a51.248635 51.248635 0 0 0 72.568068 0 51.248635 51.248635 0 0 0 0-72.978056z" p-id="1561"></path><path d="M616.479587 615.969233a50.428657 50.428657 0 0 0-61.498362-5.534852 174.655348 174.655348 0 0 1-177.525271 3.484907 49.403684 49.403684 0 0 0-58.833433 6.76482l-3.074918 2.869923a49.403684 49.403684 0 0 0 8.609771 78.10292 277.767601 277.767601 0 0 0 286.992355-5.739847 49.403684 49.403684 0 0 0 8.404776-76.667958z" p-id="1562"></path></svg></a><input type="text" class="search-input" id="search-input" placeholder="站内搜索"></form><div id="search-result"></div><div class="search-no-result">没有找到内容！</div></div>
+
+
+<nav class="menu dis-select"></nav>
+</div>
+<div class="widgets">
+
+
+<widget class="widget-wrapper post-list"><div class="widget-header dis-select"><span class="name">最近更新</span></div><div class="widget-body fs14"><a class="item title" href="/Fixer-itb/2022/12/12/test/"><span class="title">hexo tech blog</span></a><a class="item title" href="/Fixer-itb/2024/08/24/hello-world/"><span class="title">Hello World</span></a></div></widget>
+</div>
+
+</div></aside><div class="l_main" id="main">
+
+
+
+
+
+<div class="article banner top">
+  <div class="content">
+    <div class="top bread-nav footnote"><div class="left"><div class="flex-row" id="breadcrumb"><a class="cap breadcrumb" href="/Fixer-itb/Fixer-itb/">主页</a>
+<span class="sep"></span><a class="cap breadcrumb" href="/Fixer-itb/">文章</a></div>
+<div class="flex-row" id="post-meta"><span class="text created">发布于：<time datetime="2024-08-24T04:19:57.141Z">2024-08-24</time></span><span class="sep updated"></span><span class="text updated">更新于：<time datetime="2024-03-29T17:18:40.217Z">2024-03-30</time></span></div></div></div>
+    
+  </div>
+  </div><article class="md-text content"><h1 id="室内行人移动方位推算技术-Pedestrian-Dead-Reckoning-PDR"><a href="#室内行人移动方位推算技术-Pedestrian-Dead-Reckoning-PDR" class="headerlink" title="室内行人移动方位推算技术 (Pedestrian Dead Reckoning, PDR)"></a>室内行人移动方位推算技术 (Pedestrian Dead Reckoning, PDR)</h1><h2 id="一、问题描述"><a href="#一、问题描述" class="headerlink" title="一、问题描述"></a>一、问题描述</h2><h3 id="1-1-问题背景"><a href="#1-1-问题背景" class="headerlink" title="1.1 问题背景"></a>1.1 问题背景</h3><p>室内 GPS 信号受到阻隔，尤其时车库场景无线接入点 AP 较为稀疏，室内定位很难通过 GPS 或位置指纹等技术实现。行人行位推算技术（Pedestrian Dead Reckoning，PDR）可以有效解决这一问题，它利用手机内置传感器收集数据，通过轻量级低功耗算法运行框架和技术，实现稳定可靠、高精度的方位推算计算。</p>
+<h3 id="1-2-输入"><a href="#1-2-输入" class="headerlink" title="1.2  输入"></a>1.2  输入</h3><p>输入为 CSV 格式，其每一行都有数据值及采集到该数据时的时间（从开始收集计算），以加速度计为例：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&quot;Time (s)&quot;,&quot;Acceleration x (m/s^2)&quot;,&quot;Acceleration y (m/s^2)&quot;,</span><br><span class="line">&quot;Acceleration z (m/s^2)&quot;</span><br><span class="line">9.364549000E-3,1.003170490E0,3.543418407E0,7.366958618E0</span><br><span class="line">1.136538300E-2,9.696516991E-1,3.600879431E0,7.357381821E0</span><br><span class="line">1.336699700E-2,9.696516991E-1,3.620033026E0,7.343016624E0</span><br></pre></td></tr></table></figure>
+
+<p>输入数据包括：</p>
+<ol>
+<li><code>Accelerometer.csv, Linear Accelerometer.csv</code>：50Hz 采集的加速度和线加速度，单位为 $m&#x2F;s^2$</li>
+<li><code>Magnetometer.csv</code>：50Hz 采集的磁力计读数，单位为 $\mu\text{T}$</li>
+<li><code>Gyroscope.csv</code>：50Hz 采集的陀螺仪读数，单位为 $\text{rad}&#x2F;s$</li>
+<li><code>Location_input.csv</code>：前 10% 时间的 1Hz 的 GPS 位置读数：<ol>
+<li>经纬度 <code>Latitude, Longitude</code>，单位为 $\degree$</li>
+<li>高度 <code>Height</code>，单位为 $m$</li>
+<li>速度 <code>Velocity</code>，单位为 $m&#x2F;s$</li>
+<li>方位角 <code>Direction</code>，单位为 $\degree$</li>
+<li>垂直和水平精度 <code>Horizontal Accuracy, Vertical Accuracy</code>，单位为 $m$</li>
+</ol>
+</li>
+</ol>
+<p>其中加速度、线加速度、磁力计、陀螺仪均有三个维度上的读数：</p>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/2022-12-01-15-09-28.png" width="50%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 1.1</b> 数据的三个维度
+    <br />
+    <br />
+</div>
+
+
+<h3 id="1-3-输出"><a href="#1-3-输出" class="headerlink" title="1.3 输出"></a>1.3 输出</h3><p>输出为后 90% 时间的 1Hz 的 GPS 位置读数中的经纬度和方位角，即不需要输出速度、高度和精度。</p>
+<p>输出也是 CSV 格式。输出文件 <code>Location_output.csv</code> 的前 10% 将复制 <code>Location_input.csv</code> ，并填充其后 90% 的经纬度和方位角。</p>
+<h2 id="二、数据收集与处理"><a href="#二、数据收集与处理" class="headerlink" title="二、数据收集与处理"></a>二、数据收集与处理</h2><h3 id="2-1-数据收集"><a href="#2-1-数据收集" class="headerlink" title="2.1 数据收集"></a>2.1 数据收集</h3><p>数据收集工作由多组合作完成，使用软件 phyphox（中文名：手机物理工坊）。</p>
+<p>针对室内场景，我们在多种设备上收集并使用了以下三种状态采集到的数据：</p>
+<ol>
+<li>步行，手机拿在手上，共 45 组</li>
+<li>步行，手机放在背包内，共 4 组</li>
+<li>步行，手机放在裤兜内，共 11 组</li>
+</ol>
+<p>每种数据都收集了多组。在单次收集过程中，手机大部分时间保持在同一个状态下。</p>
+<p>此外我们还收集了一些不太可能出现在室内的运动状态，用于测试模型的迁移性能：</p>
+<ol>
+<li>骑车，手机拿在手上，共 5 组</li>
+<li>骑车，手机放在背包内，共 1 组</li>
+<li>跑步，手机放在裤兜内，共 4 组</li>
+<li>骑车，手机放在裤兜内，共 7 组</li>
+</ol>
+<p>收集到的数据（及代码在其上的运行结果）可以在 <a target="_blank" rel="noopener" href="https://box.nju.edu.cn/f/173d68b2c9b44146a46b/">这里</a> 获取。</p>
+<p>地址为: <a target="_blank" rel="noopener" href="https://box.nju.edu.cn/f/173d68b2c9b44146a46b/">https://box.nju.edu.cn/f/173d68b2c9b44146a46b/</a></p>
+<h3 id="2-2-数据划分"><a href="#2-2-数据划分" class="headerlink" title="2.2 数据划分"></a>2.2 数据划分</h3><p>由于模型的特点，我们没有使用训练集，不需要进行数据划分，收集的所有数据都用于测试。</p>
+<h2 id="三、总体思路"><a href="#三、总体思路" class="headerlink" title="三、总体思路"></a>三、总体思路</h2><h3 id="3-1-前期思考"><a href="#3-1-前期思考" class="headerlink" title="3.1 前期思考"></a>3.1 前期思考</h3><p>经过分析，我们发现 PDR 算法的关键只有两点：</p>
+<ol>
+<li>如何预测出任给一个时间点的已走过的 <strong>路程</strong>。</li>
+<li>如何预测出任给一个时间点的对应 <strong>前进方向</strong>。</li>
+</ol>
+<p>我们很容易猜想 <strong>路程</strong> 在 <strong>理论上</strong> 应该是通过 <strong>加速计加速度</strong> 二重积分得到的，方向应该是经过 <strong>陀螺仪角速度</strong> 一重积分得到的。</p>
+<p>但是事实上理论和实践有着很大的差距，我们测量出来的 <strong>加速度</strong> 和 <strong>角速度</strong> 总是在不断的振荡，与真实数据存在非常大的误差，这是因为：</p>
+<ol>
+<li>手机并不是固定在人的身上的，例如手机拿在手上时，就会随着手的活动不断摇摆振荡；</li>
+<li>手机自带的加速度计和陀螺仪就存在着一定的误差。</li>
+</ol>
+<p>所以根据积分来计算出路程和方向的想法是不可行的，我们需要思考准确性和稳定性更强的方案。</p>
+<p>这里我们发现：</p>
+<ol>
+<li>加速度的幅值的振荡频率和行人的步伐振荡频率强相关；</li>
+<li>磁力计的磁场强度与前进方向强相关（磁场强度方向指向北方）；</li>
+<li>我们拥有前 10% 的数据，可以从中学得很多有用的信息，比如每走一步的长度，再比如初始的前进方向。</li>
+</ol>
+<p>根据这三个线索，我们制定了下面的 PDR 算法思路。</p>
+<h3 id="3-2-实现思路"><a href="#3-2-实现思路" class="headerlink" title="3.2 实现思路"></a>3.2 实现思路</h3><p>总体思路为步伐检测和方向预测。</p>
+<p>我们需要在通过传感器得来的数据判断当前行人是否在行走，什么时侯迈出步子，行走的步幅大小为多少，前进的方向又是多少。</p>
+<p>在知道上面这些问题的答案后，我们便可以通过下面的公式来预测出行走的坐标点轨迹了。</p>
+<p>公式：</p>
+<p>$$<br>\begin{equation}<br>    \begin{cases}<br>        X_k &#x3D; X_{k-1} + L_{k-1,k} \cdot \cos(\theta_{k-1, k}) \<br>        Y_k &#x3D; Y_{k-1} + L_{k-1,k} \cdot \sin(\theta_{k-1, k}) \<br>    \end{cases}<br>\end{equation}<br>$$</p>
+<p>($X$，$Y$) 为经纬度坐标点，$L_{k-1,k}$ 第$k-1$ 步的步幅，$\theta_{k-1, k}$ 为第 $k-1$ 步的方向。</p>
+<h2 id="四、数据预处理"><a href="#四、数据预处理" class="headerlink" title="四、数据预处理"></a>四、数据预处理</h2><h3 id="4-1-经纬度转换"><a href="#4-1-经纬度转换" class="headerlink" title="4.1 经纬度转换"></a>4.1 经纬度转换</h3><p>由于输入和输出的位置信息是以经纬度为准的，而经纬度作为位置信息有一些缺点：</p>
+<ol>
+<li>经纬度是绝对位置，不是相对位置，后续处理比较困难；</li>
+<li>经纬度的单位长度的实际物理长度过大，比如经纬度的一度可能就对应着几十或上百公里，而我们实际的行走范围可能不会超过一公里；</li>
+<li>经纬度是在球形地球的假设上进行计算的，难以直接转换成以米为单位，也难以转到平面坐标系。</li>
+</ol>
+<p>针对上面问题，我们使用了一个公式：</p>
+<p>$$<br>\begin{equation}<br>    \begin{cases}<br>        X_k &#x3D; K \cdot (\mathrm{latitude}_k - \mathrm{latitude_origin}) \<br>        Y_k &#x3D; K \cdot (\mathrm{longitude}_k - \mathrm{longitude_origin}) \<br>    \end{cases}<br>\end{equation}<br>$$</p>
+<p>对经纬度进行转换，其中 $K &#x3D; 10^{5}$，而 $\mathrm{latitude_origin}$ 和 $\mathrm{longitude_origin}$ 为我们选定的初始坐标点，这里我们选用了第 10% 行数据对应的经纬度为初始坐标点。</p>
+<p>而 $K &#x3D; 10^{5}$ 是为了将数据放大到和单位米相同的数量级，由于我们的运动范围较小，因此我们可以直接忽略球形地球假设，直接使用平面坐标系。</p>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/example.png" width="80%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 4.1</b> 以 X 为横坐标，以 Y 为纵坐标得到的平面坐标系图
+    <br />
+    <br />
+</div>
+
+<p>经过经纬度转换后，我们使用 $X$ 和 $Y$ 的数据画出 <code>test_case0</code> 对应平面坐标系，并且每隔一段画出对应的前进方向的箭头，我们可以看出前进方向和我们转换后的 $X$ 和 $Y$ 依旧是吻合的。</p>
+<h3 id="4-2-最近邻插值对齐数据"><a href="#4-2-最近邻插值对齐数据" class="headerlink" title="4.2 最近邻插值对齐数据"></a>4.2 最近邻插值对齐数据</h3><p>我们的输入有五个文件（忽略气压计数据），分别为：</p>
+<ul>
+<li><code>Accelerometer.csv</code>（加速度计数据，50 Hz）</li>
+<li><code>Linear Accelerometer.csv</code>（线性加速度计数据，50 Hz）</li>
+<li><code>Gyroscope.csv</code>（陀螺仪数据，50 Hz）</li>
+<li><code>Magnetometer.csv</code>（磁力计数据，50 Hz）</li>
+<li><code>Location_input.csv</code>（GPS 位置信息，1 Hz）</li>
+</ul>
+<p>可以看出，GPS 位置信息和其他的输入数据的频率并不相同，它们的频率 <strong>在理论上</strong> 是 1: 50 的关系。但是由于每个传感器的周期并不完全同步，也存在着时钟周期误差的影响，最后导致实际记录的数据实际上并不是严格 1: 50 对齐的，有可能每一个文件的数据长度都各不相同。</p>
+<p>数据不对齐以及长度不一致的话，在数据处理和计算时会造成各种错误，甚至代码无法执行，所以我们首先一个很重要的任务就是对齐数据，让它们数据长度严格保证是 1: 50 的比例，且在时间轴上（或者说在同一个下标下）严格对齐。</p>
+<p>在这里，我们使用了最近邻插值的方法，以 <code>Location_input.csv</code> 的时间轴为基准，进行了最近邻插值，对数据进行了对齐处理。大致算法如下：</p>
+<ol>
+<li>将 <code>Location_input.csv</code> 的 1 Hz 的时间轴 <code>time_location</code> 线性扩充成 50 Hz 的时间轴 <code>time</code>, 例如 <code>time_locaiton = [1., 2.]</code> 的话，便会扩充成 <code>time = [1., 1.02, 1.04, ..., 1.98, 2., 2.02, 2.04, ..., 2.98]</code>, 其中 <code>len(time) = 100</code>。</li>
+<li>将其他 50 Hz 的数据通过最近邻插值对齐到 <code>time</code> 时间轴上，最近邻插值即为每一个点匹配到最近的样本点。例如 <code>Accelerometer.csv</code> 的数据 <code>[[1.01, 1], [1.02, 2], [1.03, 3], [1.04, 4]]</code> 可能就会被最近邻插值为 <code>[[1.00, 1], [1.02, 2], [1.04, 4]]</code>。</li>
+</ol>
+<p>通过最近邻插值，我们就能保证数据是严格的 1: 50 沿着时间轴对齐了。例如 <code>test_case</code> 的数据经过数据预处理后的尺寸如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">test_case.time_location.shape = (<span class="number">601</span>,)</span><br><span class="line">test_case.time.shape = (<span class="number">30050</span>,)</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-3-对应的代码以及-TestCase-接口"><a href="#4-3-对应的代码以及-TestCase-接口" class="headerlink" title="4.3 对应的代码以及 TestCase 接口"></a>4.3 对应的代码以及 TestCase 接口</h3><p>最近邻插值的代码为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">nearest_neighbor_interpolation</span>(<span class="params">time, time_data, data</span>):</span><br><span class="line">    <span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">    使用最近邻插值获取新的 data_interp</span></span><br><span class="line"><span class="string">    &#x27;&#x27;&#x27;</span></span><br><span class="line">    data_interp = []</span><br><span class="line">    <span class="comment"># 当前下标 i</span></span><br><span class="line">    i = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> t <span class="keyword">in</span> time:</span><br><span class="line">        <span class="keyword">while</span> i &lt; <span class="built_in">len</span>(time_data) - <span class="number">1</span> <span class="keyword">and</span> t &gt;= time_data[i + <span class="number">1</span>]:</span><br><span class="line">            i += <span class="number">1</span></span><br><span class="line">        data_interp.append(data[i])</span><br><span class="line">    <span class="keyword">return</span> np.array(data_interp)</span><br></pre></td></tr></table></figure>
+
+<p>我们封装了一个类 <code>TestCase</code>，用于加载数据、数据预处理、数据抽象和数据保存。<code>TestCase</code> 类保存在 <code>dataloader.py</code> 文件下，部分接口如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 通过文件路径加载一个 TestCase </span></span><br><span class="line">test_case = TestCase(<span class="string">&quot;test_case0&quot;</span>)</span><br><span class="line"><span class="comment"># 可以对 TestCase 进行切片, 单位为秒</span></span><br><span class="line">new_test_case = test_case.<span class="built_in">slice</span>(<span class="number">100</span>, <span class="number">500</span>)</span><br><span class="line"><span class="comment"># 1 Hz 的时间轴</span></span><br><span class="line"><span class="built_in">print</span>(test_case.time_location)</span><br><span class="line"><span class="comment"># 50 Hz 的时间轴</span></span><br><span class="line"><span class="built_in">print</span>(test_case.time)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 加速度数据</span></span><br><span class="line"><span class="built_in">print</span>(test_case.a)</span><br><span class="line"><span class="built_in">print</span>(test_case.a_x)</span><br><span class="line"><span class="built_in">print</span>(test_case.a_y)</span><br><span class="line"><span class="built_in">print</span>(test_case.a_z)</span><br><span class="line"><span class="comment"># 加速度幅值</span></span><br><span class="line"><span class="built_in">print</span>(test_case.a_mag)</span><br><span class="line"><span class="comment"># 磁力计数据</span></span><br><span class="line"><span class="built_in">print</span>(test_case.m)</span><br><span class="line"><span class="built_in">print</span>(test_case.m_x)</span><br><span class="line"><span class="built_in">print</span>(test_case.m_y)</span><br><span class="line"><span class="built_in">print</span>(test_case.m_z)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 必然存在的前 10% 的数据 (Location_input.csv)</span></span><br><span class="line"><span class="built_in">print</span>(test_case.x)</span><br><span class="line"><span class="built_in">print</span>(test_case.y)</span><br><span class="line"><span class="built_in">print</span>(test_case.direction)</span><br><span class="line"><span class="comment"># 对应的长度</span></span><br><span class="line"><span class="built_in">print</span>(test_case.len_input)</span><br><span class="line"><span class="comment"># 可能存在的验证数据 (Location.csv)</span></span><br><span class="line"><span class="keyword">if</span> test_case.have_location_valid:</span><br><span class="line">    <span class="built_in">print</span>(test_case.x_valid)</span><br><span class="line">    <span class="built_in">print</span>(test_case.y_valid)</span><br><span class="line">    <span class="built_in">print</span>(test_case.direction_valid)</span><br><span class="line"><span class="comment"># 可能存在的输出数据 (Location_output.csv)</span></span><br><span class="line"><span class="keyword">if</span> test_case.have_location_output:</span><br><span class="line">    <span class="built_in">print</span>(test_case.x_output)</span><br><span class="line">    <span class="built_in">print</span>(test_case.y_output)</span><br><span class="line">    <span class="built_in">print</span>(test_case.direction_output)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 将结果存储到 test_case 中, 会保存成 &quot;Location_output.csv&quot; 文件</span></span><br><span class="line">test_case.set_location_output(x_output, y_output, direction_output)</span><br><span class="line"><span class="comment"># 评估模型, 输出 Distances error, Direction error, Direction ratio</span></span><br><span class="line">test_case.eval_model()</span><br><span class="line"><span class="comment"># 画出 test_case 的路线图像</span></span><br><span class="line">test_case.draw_route()</span><br></pre></td></tr></table></figure>
+
+<p>并且在数据预处理后，还会输出一个对齐了的数据对应的 CSV 文件 <code>preprocessed.csv</code>，格式大致为：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">t,a_x,a_y,a_z,la_x,la_y,la_z,gs_x,gs_y,gs_z,m_x,m_y,m_z</span><br><span class="line">0.0,-1.2,5.2,8.2,-0.4,-0.0,-0.2,-0.2,0.4,0.1,-31.0,-22.4,-29.8</span><br><span class="line">0.0,-1.2,5.2,8.2,-0.4,-0.0,-0.2,-0.2,0.4,0.1,-31.0,-22.4,-29.8</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="五、步伐检测"><a href="#五、步伐检测" class="headerlink" title="五、步伐检测"></a>五、步伐检测</h2><p>步伐检测主要分为两个部分：</p>
+<ol>
+<li>脚步提取：行人何时向前迈了一步</li>
+<li>步幅估计：向前迈的一步有多长</li>
+</ol>
+<h3 id="5-1-脚步提取"><a href="#5-1-脚步提取" class="headerlink" title="5.1 脚步提取"></a>5.1 脚步提取</h3><p>需要的数据有：</p>
+<ul>
+<li><strong>a_mag</strong>（Accelerometer）：通过对加速度的数据求模得出一条震荡曲线；</li>
+<li><strong>GPS 位置中前 10% 的前进方向数据</strong>（Location_input）：我们可以通过前 10% 的前进方向数据。</li>
+</ul>
+<p>手机在行人行走时会产生周期性晃动，加速度计数据可以反映步数特征。设备姿态的变化会影响三个轴上的加速度值，为了避免这种影响，选择加速度<code>a_mag</code>的大小作为阶跃检测的标准。</p>
+<p>$$<br>\begin{equation}<br>    \text{a_mag} &#x3D; \sqrt{a_x^2 + a_y^2+a_z^2}<br>\end{equation}<br>$$</p>
+<p>使用 <code>test_case0</code> 中的部分时间段内的加速度幅度作为处理示例，未经处理的数据如下：</p>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/2022-12-01-20-00-32.png" width="80%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 5.1</b> 未经滤波的加速度 a_mag
+    <br />
+    <br />
+</div>
+
+<p>通过肉眼可以清晰的看出加速度的震荡具有规律性，较大峰值个数表示行人的可能步数。接着进行处理：</p>
+<h4 id="5-1-1-滤波器处理"><a href="#5-1-1-滤波器处理" class="headerlink" title="5.1.1 滤波器处理"></a>5.1.1 滤波器处理</h4><p>此时先用滤波器进行滤波，将波动变得更加光滑，消除小波峰:</p>
+<p>代码：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">### 滤波器</span></span><br><span class="line"><span class="keyword">def</span> <span class="title function_">filter</span>(<span class="params"><span class="built_in">range</span>,data</span>):</span><br><span class="line">    <span class="built_in">filter</span> = np.ones(<span class="built_in">range</span>) / <span class="built_in">range</span></span><br><span class="line">    <span class="keyword">return</span> np.convolve(data, <span class="built_in">filter</span>, mode=<span class="string">&quot;same&quot;</span>)</span><br><span class="line"></span><br><span class="line">new_test_case = test_case.<span class="built_in">slice</span>(<span class="number">10</span>, <span class="number">15</span>)</span><br><span class="line"><span class="comment">### 对 a_mag 进行滤波</span></span><br><span class="line">filtered_a = <span class="built_in">filter</span>(<span class="number">10</span>,new_test_case.a_mag)</span><br></pre></td></tr></table></figure>
+
+<p>滤波效果：</p>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/2022-12-01-20-25-35.png" width="80%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 5.2</b> 滤波后的加速度 a_mag
+    <br />
+    <br />
+</div>
+
+<h4 id="5-1-2-步长间隔选择"><a href="#5-1-2-步长间隔选择" class="headerlink" title="5.1.2 步长间隔选择"></a>5.1.2 步长间隔选择</h4><p>一般人的步频最大为 3 Hz ，设定 0.4 秒的间隔查找峰值，如果含有多个峰值，则其中含有假峰，选取波峰最大的那一个。</p>
+<p>波峰采集效果：</p>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/2022-12-01-21-04-19.png" width="80%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 5.3</b> 设置步长间隔后的波峰采集
+    <br />
+    <br />
+</div>
+
+<h4 id="5-1-3-候选锋检测"><a href="#5-1-3-候选锋检测" class="headerlink" title="5.1.3 候选锋检测"></a>5.1.3 候选锋检测</h4><p>在选取好候选波峰后，其中依然可能含有假波峰，例如行人行走过程中突然停下来，停下来的期间不可避免的会有微小振动，而这些振动中的波峰也会被识别到。此时对所有候选波峰求平均，并保留大于 平均值*0.8 的部分。</p>
+<h3 id="5-2-步幅估计"><a href="#5-2-步幅估计" class="headerlink" title="5.2 步幅估计"></a>5.2 步幅估计</h3><p>在原始数据中，我们已经拥有了经纬度坐标，借此我们可以计算出经纬度坐标间的距离；同时，我们也进行了脚步提取，知道什么时间迈出了一步。此时就需要通过前百分之十的数据，对步幅进行一个估计。</p>
+<p>在预测前，我们发现并不知道行人每一步迈出的具体长度；而脚步波峰对应的时间 与 经纬度坐标的时间没有对齐，实际情况为：</p>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/2022-12-01-21-42-15.png" width="80%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 5.4</b> 脚步波峰对应的时间节点与经纬度坐标对应时间节点没有对齐
+    <br />
+    <br />
+</div>
+
+<p>处理这个问题的方式是通过相距的两个点间的距离，除以这两坐标点间的脚步数，作为这两点间脚步的步幅。这里我们设定一个超参数 <code>distance_frac_step</code>，作为这两个坐标点间一共有包含多少坐标点，具体：</p>
+<p>$$<br>\begin{equation}<br>    \text{step_length} &#x3D; \frac{\text{distance}(d_i,d_j)}{\text{steps}(d_i,d_j)}<br>\end{equation}<br>$$</p>
+<p>$$<br>\begin{equation}<br>    j-i &#x3D; \text{distance_frac_step}<br>\end{equation}<br>$$</p>
+<p>综上，解决了一定范围内步幅的标定。</p>
+<h4 id="5-21-通过步频与加速度震荡方差构建线性回归"><a href="#5-21-通过步频与加速度震荡方差构建线性回归" class="headerlink" title="5.21 通过步频与加速度震荡方差构建线性回归"></a>5.21 通过步频与加速度震荡方差构建线性回归</h4><p>步幅本身因人而异，它是一个与行人有关的变量。然而对于同一行人，步幅长短主要与行人的步频 $\text{f}$ 与 每一步的跨度 $\sigma$ 有关（这里的跨度用加速度震荡方差表示）。下面用线性模型 [2] 表示：</p>
+<p>$$<br>\begin{equation}<br>    \text{L} &#x3D; A · \text{f} + B · σ + C<br>\end{equation}<br>$$</p>
+<p>步频 $\text{f}$ 与加速度震荡方差 $\sigma$ 均通过上述处理获得。</p>
+<h4 id="5-22-初始干扰数据的消除"><a href="#5-22-初始干扰数据的消除" class="headerlink" title="5.22 初始干扰数据的消除"></a>5.22 初始干扰数据的消除</h4><p>在使用线性回归模型表示时，发现前几秒提供的数据位置变化较大，对线性回归模型影响非常明显。</p>
+<p>这里提供超参数 <code>clean_data</code>，用来表示前 10% 的数据中被消除的可能干扰数据个数。</p>
+<h4 id="5-23-多学习器的综合"><a href="#5-23-多学习器的综合" class="headerlink" title="5.23 多学习器的综合"></a>5.23 多学习器的综合</h4><p>通过尝试线性回归模型，发现预测结果很不稳定，所以希望在其他的学习器下进行尝试。</p>
+<p>得益于包装完善的学习器包，我们尝试了如下学习器：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">try_model</span>(<span class="params">model: <span class="built_in">str</span></span>):</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> model == <span class="string">&#x27;DecisionTree&#x27;</span>:</span><br><span class="line">        <span class="comment">#### 3.1决策树回归####</span></span><br><span class="line">        <span class="keyword">from</span> sklearn <span class="keyword">import</span> tree</span><br><span class="line">        model_output = tree.DecisionTreeRegressor()</span><br><span class="line">    <span class="comment">#### 3.2线性回归####</span></span><br><span class="line">    <span class="keyword">elif</span> model == <span class="string">&#x27;Linear&#x27;</span>:</span><br><span class="line">        <span class="keyword">from</span> sklearn <span class="keyword">import</span> linear_model</span><br><span class="line">        model_output = linear_model.LinearRegression()</span><br><span class="line">    <span class="comment">#### 3.3SVM回归####</span></span><br><span class="line">    <span class="keyword">elif</span> model == <span class="string">&#x27;SVR&#x27;</span>:</span><br><span class="line">        <span class="keyword">from</span> sklearn <span class="keyword">import</span> svm</span><br><span class="line">        model_output = svm.SVR()</span><br><span class="line">    <span class="comment">#### 3.4KNN回归####</span></span><br><span class="line">    <span class="keyword">elif</span> model == <span class="string">&#x27;KNeighbors&#x27;</span>:</span><br><span class="line">        <span class="keyword">from</span> sklearn <span class="keyword">import</span> neighbors</span><br><span class="line">        model_output = neighbors.KNeighborsRegressor()</span><br><span class="line">    <span class="comment">#### 3.5随机森林回归####</span></span><br><span class="line">    <span class="keyword">elif</span> model == <span class="string">&#x27;RandomForest&#x27;</span>:</span><br><span class="line">        <span class="keyword">from</span> sklearn <span class="keyword">import</span> ensemble</span><br><span class="line">        model_output = ensemble.RandomForestRegressor(</span><br><span class="line">            n_estimators=<span class="number">20</span>)  <span class="comment"># 这里使用20个决策树</span></span><br><span class="line">    <span class="comment">#### 3.6Adaboost回归####</span></span><br><span class="line">    <span class="keyword">elif</span> model == <span class="string">&#x27;AdaBoost&#x27;</span>:</span><br><span class="line">        <span class="keyword">from</span> sklearn <span class="keyword">import</span> ensemble</span><br><span class="line">        model_output = ensemble.AdaBoostRegressor(</span><br><span class="line">            n_estimators=<span class="number">50</span>)  <span class="comment"># 这里使用50个决策树</span></span><br><span class="line">    <span class="comment">#### 3.7GBRT回归####</span></span><br><span class="line">    <span class="keyword">elif</span> model == <span class="string">&#x27;GradientBoosting&#x27;</span>:</span><br><span class="line">        <span class="keyword">from</span> sklearn <span class="keyword">import</span> ensemble</span><br><span class="line">        model_output = ensemble.GradientBoostingRegressor(</span><br><span class="line">            n_estimators=<span class="number">100</span>)  <span class="comment"># 这里使用100个决策树</span></span><br><span class="line">    <span class="comment">#### 3.8Bagging回归####</span></span><br><span class="line">    <span class="keyword">elif</span> model == <span class="string">&#x27;Bagging&#x27;</span>:</span><br><span class="line">        <span class="keyword">from</span> sklearn.ensemble <span class="keyword">import</span> BaggingRegressor</span><br><span class="line">        model_output = BaggingRegressor()</span><br><span class="line">    <span class="comment">#### 3.9ExtraTree极端随机树回归####</span></span><br><span class="line">    <span class="keyword">elif</span> model == <span class="string">&#x27;ExtraTree&#x27;</span>:</span><br><span class="line">        <span class="keyword">from</span> sklearn.tree <span class="keyword">import</span> ExtraTreeRegressor</span><br><span class="line">        model_output = ExtraTreeRegressor()</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        <span class="keyword">raise</span> Exception(<span class="string">&#x27;No such model.&#x27;</span>)</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> model_output</span><br></pre></td></tr></table></figure>
+
+<p>其中包含了线性回归模型。<br>最后的预测效果将结合方向预测一起给出。</p>
+<h2 id="六、方向预测"><a href="#六、方向预测" class="headerlink" title="六、方向预测"></a>六、方向预测</h2><h3 id="6-1-方向预测所需数据"><a href="#6-1-方向预测所需数据" class="headerlink" title="6.1 方向预测所需数据"></a>6.1 方向预测所需数据</h3><p>为了实现准确且稳定的前进方向预测功能，这里我们主要使用了三类数据：</p>
+<ul>
+<li><strong>磁力计数据</strong>（Magnetometer）：北半球磁场方向始终指向北偏下，因此磁力计数据是预测前进方向的核心；</li>
+<li><strong>加速度计中的重力加速度数据</strong>（Accelerometer）：我们对加速度计测出来的加速度进行处理，便能得到重力加速度数据，重力加速度数据是确定手机坐标轴朝向的核心；</li>
+<li><strong>GPS 位置中前 10% 的前进方向数据</strong>（Location_input）：我们可以通过前 10% 的前进方向数据。</li>
+</ul>
+<p>注意，这里我们并没有用到陀螺仪的数据，因为陀螺仪测出来的是角速度，很容易被手机的摇摆振荡的角速度变化干扰，因此陀螺仪的数据几乎是不可用的，这里我们就舍弃了这个数据。</p>
+<h3 id="6-2-低通滤波过滤手机自身振荡"><a href="#6-2-低通滤波过滤手机自身振荡" class="headerlink" title="6.2 低通滤波过滤手机自身振荡"></a>6.2 低通滤波过滤手机自身振荡</h3><p>磁力计和加速度计记录的数据，会随着手机自身的摇摆而不断地振荡。这种振荡是不可避免的，因为它来源于：</p>
+<ol>
+<li>行人行走时将手机拿在手上，手机随着手的摆动而振荡；</li>
+<li>行人行走时将手机放在口袋里，手机随着大腿的摆动而振荡；</li>
+<li>行人行走时将手机固定在某一位置（如打电话固定在耳旁），手机也依然会因为行走本身就不是匀速的，因而发生振荡。</li>
+</ol>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/2022-12-01-18-58-24.png" width="80%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 6.1</b> 人的行走会引起振荡
+    <br />
+    <br />
+</div>
+
+<p>手机的摇摆会引起手机坐标轴发生变化，进而导致测出来的磁力和加速度数据在 xyz 三个轴上不断地振荡变化。</p>
+<p>为了消除这种振荡，我使用了一个截止频率相关参数 <code>Wn</code> 大致在 0.005 左右的 2 阶 <strong>Butterworth 低通滤波器</strong>，将磁力和加速度进行低通滤波，得到了更为平滑的磁力和加速度数据。由于加速度经过了低通滤波，几乎就等于被取了平均值，和重力无关的加速度被抵消，因此此时我们有 **加速度 $a$ 等于重力加速度 $g$**。</p>
+<p>这里有一点很有趣的事实，除了这种对加速度低通滤波得到重力加速度的方法外，我们还可以通过 <strong>加速度计数据减去线性加速度计数据</strong> 这种方法，得到重力加速度 $g$，只不过依然需要滤波。</p>
+<p>$$<br>\begin{equation}<br>    \begin{cases}<br>        g \approx \operatorname{lowass}(a) \<br>        g \approx \operatorname{lowass}(a - la) \<br>    \end{cases}<br>\end{equation}<br>$$</p>
+<p>滤波器的代码为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">b, a = signal.butter(<span class="number">2</span>, <span class="number">0.005</span>, <span class="string">&#x27;lowpass&#x27;</span>)</span><br><span class="line">m_x = signal.filtfilt(b, a, tc.m_x)</span><br><span class="line">m_y = signal.filtfilt(b, a, tc.m_y)</span><br><span class="line">m_z = signal.filtfilt(b, a, tc.m_z)</span><br></pre></td></tr></table></figure>
+
+<p>由图便可看出，经过低通滤波后的磁力和加速度均平缓了很多，可以直接用于后续的方向预测了。</p>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/2022-12-01-18-50-15.png" width="80%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 6.2</b> 磁力计数据低通滤波
+    <br />
+    <br />
+</div>
+
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/2022-12-01-18-50-28.png" width="80%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 6.3</b> 加速度计数据低通滤波（滤波后等于重力加速度）
+    <br />
+    <br />
+</div>
+
+<p>这里有很关键的一点，这是作业文档中提到的一个假设，并且也是我们后续进行方向预测的核心假设：<strong>在实验过程中，手机大部分时间保持在同一个状态下（如一直拿在手上）</strong>。</p>
+<p>有了这个假设，我们就可以推出一个更强的结论：<strong>经过低通滤波后的数据，可以等同于，手机相对于人没有发生任何旋转、位移与振荡时（即完全固定），记录下来的数据。</strong></p>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/lowpass.png" width="80%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 6.4</b> 手机经过低通滤波后不再振荡，可以认为相对于人来说位置和方向是固定的
+    <br />
+    <br />
+</div>
+
+<p>借助这个结论，我们就可以使用空间解析几何的方法，通过磁力计等数据预测出当前的前进方向。</p>
+<h3 id="6-3-空间解析几何预测偏转角度"><a href="#6-3-空间解析几何预测偏转角度" class="headerlink" title="6.3 空间解析几何预测偏转角度"></a>6.3 空间解析几何预测偏转角度</h3><p>首先我们有两个很重要的前提：</p>
+<ol>
+<li><strong>磁力计测出来的数据，是在手机坐标系下的一系列向量，并且该向量方向总是指向北偏下；</strong></li>
+<li><strong>重力加速度，是在手机坐标系下的一系列向量，并且该向量方向总是指向下。</strong></li>
+</ol>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/2022-12-01-21-04-40.png" width="60%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 6.5</b> 部分向量之间的关系，从论文 [1] 中截取
+    <br />
+    <br />
+</div>
+
+<p>因此我们有以下的步骤：</p>
+<p>第一步，首先用重力加速度向量 $g$ 和磁力向量 $m$ 叉乘得到东向量 $e$。</p>
+<p>$$<br>\begin{equation}<br>    e &#x3D; g \times m<br>\end{equation}<br>$$</p>
+<p>第二步，选出一个初始东向量，例如这里可以选取第 10% 个东向量作为初始东向量。</p>
+<p>$$<br>\begin{equation}<br>    e_0 &#x3D; e_{10%}<br>\end{equation}<br>$$</p>
+<p>第三步，通过东向量与初始东向量的点乘除以模获取东向量和初始东向量的夹角，并转成角度制。</p>
+<p>$$<br>\begin{equation}<br>    \theta &#x3D; \frac{180}{\pi} \cdot \arccos\frac{e \cdot e_0}{|e||e_0|}<br>\end{equation}<br>$$</p>
+<p>注意，此时我们并不知道 $e$ 在 $e_0$ 的左侧还是右侧，所以我们缺少一个符号。 </p>
+<p>第四步，通过东向量与初始东向量叉乘后，与重力加速度点乘，得到对应的正负符号。</p>
+<p>$$<br>\begin{equation}<br>    \mathrm{signs} &#x3D; - \operatorname{sign}((e \times e_0) \cdot g)<br>\end{equation}<br>$$</p>
+<p>最后，我们就得到了前进方向与 $e_0$ 对应的初始方向 $\mathrm{direction_0}$ 的偏转角度。</p>
+<p>$$<br>\begin{equation}<br>    \mathrm{direction_diff} &#x3D; \mathrm{signs} \cdot \theta<br>\end{equation}<br>$$</p>
+<p>最后的前进方向就是初始方向 $\mathrm{direction_0}$ 加上偏转角度，即</p>
+<p>$$<br>\begin{equation}<br>    \mathrm{direction} &#x3D; \mathrm{signs} \cdot \theta + \mathrm{direction_0}<br>\end{equation}<br>$$</p>
+<p>还要记得最后取模 $360$，以便转换到区间 $[0, 360)$ 上。</p>
+<h3 id="6-4-使用前-10-的数据优化初始方向"><a href="#6-4-使用前-10-的数据优化初始方向" class="headerlink" title="6.4 使用前 10% 的数据优化初始方向"></a>6.4 使用前 10% 的数据优化初始方向</h3><p>选取初始东向量 $e_0$ 对应的初始方向 $\mathrm{direction_0}$ 有两种可行的方案。</p>
+<p>第一种是直接选用 $e_0$ 对应的第 10% 个方向数据作为初始方向 $\mathrm{direction_0}$。这种办法的好处是计算快捷，而且不容易受到前面 $10%$ 的其他不准确数据的干扰。</p>
+<p>第二种方法是，使用优化器，以及前 10% 的数据，最小化平均误差函数：</p>
+<p>$$<br>\begin{equation}<br>    \operatorname{mean_error}(x) &#x3D; \operatorname{mean}(\operatorname{abs}(\mathrm{direction_valid}, (\mathrm{signs} \cdot \theta + x)))<br>\end{equation}<br>$$</p>
+<p>当然，这里的取绝对值函数 $\operatorname{abs}(a, b)$ 需要考虑圆周的情况，即 $0$ 度等同于 $360$ 度。</p>
+<p>我们使用 <code>scipy</code> 的优化器，对应的优化代码为：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 平均误差</span></span><br><span class="line">error_fn = <span class="keyword">lambda</span> x: np.mean(</span><br><span class="line">    direction_diff(direction_valid, (direction_offset + x)))</span><br><span class="line"><span class="comment"># 最小化误差获取最佳初始值</span></span><br><span class="line">direction0 = scipy.optimize.minimize(error_fn, <span class="number">0</span>).x[<span class="number">0</span>]</span><br></pre></td></tr></table></figure>
+
+<p>最后我们画出 <code>test_case0</code> 对应的图像，可以发现角度预测基本吻合。</p>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/2022-12-01-21-20-00.png" width="80%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 6.6</b> test_case0 对应的真实角度和预测角度
+    <br />
+    <br />
+</div>
+
+<h3 id="6-5-遇到的问题和困难"><a href="#6-5-遇到的问题和困难" class="headerlink" title="6.5 遇到的问题和困难"></a>6.5 遇到的问题和困难</h3><p>我们使用的预测角度的方法有一个缺陷，就是我们依赖于一个核心假设：<strong>在实验过程中，手机大部分时间保持在同一个状态下（如一直拿在手上）</strong>。</p>
+<p>如果没有这个假设，预测的前进方向角度就很难保证准确。</p>
+<p>这是因为，如果手机没有一直保持在一个状态，而是进行了翻面等行为，则预测出来的方向则会发生极大的偏转。</p>
+<p>这是因为，手机发生偏转后，手机坐标轴也发生了偏转，且这种偏转不能被低通滤波所抵消。由于手机坐标轴发生了恒定的偏转，理论上东向量 $e$ 也发生了恒定的偏转，这时候我们应该将其逆偏转到原来的坐标轴，才能保证与初始东向量 $e_0$ 的夹角依然是当前的前进方向。</p>
+<p>因此我尝试过使用旋转矩阵和逆旋转矩阵来解决这个问题：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">get_rotation_matrix</span>(<span class="params">a, b</span>):</span><br><span class="line">    <span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">    get rotation matrix from two unit vectors</span></span><br><span class="line"><span class="string">    &#x27;&#x27;&#x27;</span></span><br><span class="line">    v = np.cross(a, b)</span><br><span class="line">    s = np.linalg.norm(v)</span><br><span class="line">    c = np.dot(a, b)</span><br><span class="line">    vx = np.array([[<span class="number">0</span>, -v[<span class="number">2</span>], v[<span class="number">1</span>]], [v[<span class="number">2</span>], <span class="number">0</span>, -v[<span class="number">0</span>]], [-v[<span class="number">1</span>], v[<span class="number">0</span>], <span class="number">0</span>]])</span><br><span class="line">    <span class="keyword">return</span> np.eye(<span class="number">3</span>) + vx + vx @ vx * (<span class="number">1</span> - c) / s ** <span class="number">2</span></span><br></pre></td></tr></table></figure>
+
+<p>但是最终发现还是无法解决这个问题，这便是在预测角度上所遇到的问题和困难。</p>
+<p>由于本次实验假设： <strong>在实验过程中，手机大部分时间保持在同一个状态下（如一直拿在手上）</strong>。这个问题便不存在了，因此我们也没有再过多地纠结下去。</p>
+<h2 id="七、合并算法"><a href="#七、合并算法" class="headerlink" title="七、合并算法"></a>七、合并算法</h2><h3 id="7-1-统合步伐预测和角度预测"><a href="#7-1-统合步伐预测和角度预测" class="headerlink" title="7.1 统合步伐预测和角度预测"></a>7.1 统合步伐预测和角度预测</h3><p>在拥有前百分之十的训练数据下，我们可以通过 <code>step_predictor</code> 和 <code>direction_predictor</code> 训练出可以通过后百分之九十 传感器数据 来预测 步伐 和<br>前进方向。<br>$$<br>\begin{equation}<br>    \begin{cases}<br>        X_k &#x3D; X_{k-1} + L_{k-1,k} \cdot \sin \theta_{k-1,k} \<br>        Y_k &#x3D; Y_{k-1} + L_{k-1,k} \cdot \cos \theta_{k-1,k} \<br>    \end{cases}<br>\end{equation}<br>$$</p>
+<p>前百分之十的数据保留原始数据，然后从最后一个坐标开始，每检测到走一步，便通过上述式（11）进行一次坐标点更新，知道没有步子为止。最后返回 (time,x,y) 的(n,3)矩阵。</p>
+<h3 id="7-2-线性插值获取最终预测结果"><a href="#7-2-线性插值获取最终预测结果" class="headerlink" title="7.2 线性插值获取最终预测结果"></a>7.2 线性插值获取最终预测结果</h3><p>在统合了步伐预测和角度预测之后，我们需要将最后结果，通过插值的方式，对齐到 <code>Location_input.csv</code> 的 <code>time_location</code> 的时间轴上。</p>
+<p>这里我们采用了线性插值的方式，即找到需要插值的时间点，其对应的时间轴上最近的两个样本点，通过线性函数的方式，进行线性插值。</p>
+<p>插值函数如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> <span class="title function_">linear_interpolation</span>(<span class="params">time, time_data, data</span>):</span><br><span class="line">    <span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">    使用线性插值获取新的 data_interp</span></span><br><span class="line"><span class="string">    &#x27;&#x27;&#x27;</span></span><br><span class="line">    data_interp = []</span><br><span class="line">    <span class="comment"># 当前下标 i</span></span><br><span class="line">    i = <span class="number">0</span></span><br><span class="line">    <span class="keyword">for</span> t <span class="keyword">in</span> time:</span><br><span class="line">        <span class="keyword">while</span> i &lt; <span class="built_in">len</span>(time_data) - <span class="number">2</span> <span class="keyword">and</span> t &gt;= time_data[i + <span class="number">1</span>]:</span><br><span class="line">            i += <span class="number">1</span></span><br><span class="line">        data_interp.append(data[i] + (data[i + <span class="number">1</span>] - data[i]) \</span><br><span class="line">            / (time_data[i + <span class="number">1</span>] - time_data[i]) * (t - time_data[i]))</span><br><span class="line">    <span class="keyword">return</span> np.array(data_interp)</span><br></pre></td></tr></table></figure>
+
+<p>基本与最近邻插值一致，因此这里也不过多赘述。</p>
+<p>我们将插值得到的 <code>x</code> 和 <code>y</code> 通过逆变换得到经纬度 <code>latitude</code> 和 <code>longitude</code> 后，再加上预测出来的前进方向，便得到了最后的 <code>Location_output.csv</code>。</p>
+<h2 id="八、项目代码"><a href="#八、项目代码" class="headerlink" title="八、项目代码"></a>八、项目代码</h2><h3 id="8-1-环境搭建"><a href="#8-1-环境搭建" class="headerlink" title="8.1 环境搭建"></a>8.1 环境搭建</h3><p>本项目使用 Python 运行时，用 conda 管理 Python 环境，环境定义在代码文件中的 <code>environment.yml</code> 中。<a target="_blank" rel="noopener" href="https://docs.conda.io/projects/conda/en/latest/user-guide/install/windows.html">在计算机上安装 conda</a> 后，可以执行以下命令创建运行环境：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">conda <span class="built_in">env</span> create -f environment.yml</span><br></pre></td></tr></table></figure>
+
+<h3 id="8-2-代码结构"><a href="#8-2-代码结构" class="headerlink" title="8.2 代码结构"></a>8.2 代码结构</h3><p>代码结构如下：</p>
+<figure class="highlight text"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">│  batch_test.py: 批次测试, 用于对所有测试集进行测试</span><br><span class="line">│</span><br><span class="line">│  dataloader.py: 加载样例以及进行数据预处理的核心代码, 输出 TestCase 对象</span><br><span class="line">│</span><br><span class="line">│  direction_predictor.py: 前进方向预测的代码</span><br><span class="line">│</span><br><span class="line">│  environment.yml: 环境搭建的配置文件</span><br><span class="line">│</span><br><span class="line">│  merge_direction_step.py: 将前进方向和步伐预测结合的代码</span><br><span class="line">│</span><br><span class="line">│  pdr.py: 最后通过线性插值, 将最后预测结果整合的代码</span><br><span class="line">│</span><br><span class="line">│  README.md: 项目介绍</span><br><span class="line">│</span><br><span class="line">│  report.md: 项目报告的源文件</span><br><span class="line">│</span><br><span class="line">│  step_predictor.py: 步伐预测相关的代码</span><br><span class="line">│</span><br><span class="line">│  *.ipynb: 以 .ipynb 为后缀的文件, 均是我们用于打草稿和试验的代码文件</span><br><span class="line">│</span><br><span class="line">│  test.py: 作业自带的测试代码, 可以对一个样例进行性能测试</span><br><span class="line">│</span><br><span class="line">│  高级机器学习作业.pdf: 作业要求文档</span><br><span class="line">│</span><br><span class="line">├─para_adjust: 超参数学习相关代码与结果</span><br><span class="line">│</span><br><span class="line">├─images: 文档图片</span><br><span class="line">│</span><br><span class="line">├─test_case0: 第 test_case0 测试样例</span><br><span class="line">│</span><br><span class="line">├─../Dataset-of-Pedestrian-Dead-Reckoning: 我们自己录制的数据集</span><br><span class="line">│</span><br><span class="line">├─../TestSet: 提供的测试集</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="8-3-运行代码"><a href="#8-3-运行代码" class="headerlink" title="8.3 运行代码"></a>8.3 运行代码</h3><p>首先准备数据集，数据集应当以类似 <code>test_case0</code> 的方式组织，且 CSV 格式与之相同：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">test_case0/</span><br><span class="line">├── Accelerometer.csv</span><br><span class="line">├── Barometer.csv</span><br><span class="line">├── Gyroscope.csv</span><br><span class="line">├── Linear Accelerometer.csv</span><br><span class="line">├── Location_input.csv</span><br><span class="line">└── Magnetometer.csv</span><br></pre></td></tr></table></figure>
+
+<p>然后执行 <code>python main.py --dataset test_case0</code> ，其中 <code>test_case0</code> 为数据集目录的路径。程序会把预测结果输出到 <code>test_case0/Location_output.csv</code> ，并在控制台输出消耗的时间。</p>
+<blockquote>
+<p>程序会对数据进行预处理并缓存预处理结果到文件，因此该文件存在与否对消耗时间影响较大。</p>
+<p>性能测试时，均在无缓存的情况下测试，故运行时间均包含预处理时间</p>
+</blockquote>
+<p>如果目录中包含全过程位置 <code>Location.csv</code> ，将在控制台输出 <code>dist_error, dir_error, dir_ratio</code> ，增加 <code>--silent</code> 标志将阻止控制台输出。</p>
+<h3 id="8-4-执行测试"><a href="#8-4-执行测试" class="headerlink" title="8.4 执行测试"></a>8.4 执行测试</h3><p>在 <code>batch_test.py</code> 中提供了三种在多个数据集上进行测试的方法：</p>
+<ol>
+<li><code>main</code> ：测试程序在默认参数下，在我们收集的 54 个数据集上的运行结果</li>
+<li><code>test_step_method</code> ：测试程序在不同的预测步幅的算法下，在 54 个数据集上的平均结果</li>
+<li><code>mp_test</code> ：多进程地测试程序在不同的参数组合下，在 54 个数据集上的结果（用于调参，运行时间较长）</li>
+</ol>
+<p><code>batch_test.py</code> 假设我们 <a target="_blank" rel="noopener" href="https://box.nju.edu.cn/f/173d68b2c9b44146a46b/">收集到的数据集 (点此下载)</a> 放置在工作目录的 <code>../Dataset-of-Pedestrian-Dead-Reckoning/</code> 内。</p>
+<h2 id="九、性能测试"><a href="#九、性能测试" class="headerlink" title="九、性能测试"></a>九、性能测试</h2><h3 id="9-1-在-test-case0-上的运行情况"><a href="#9-1-在-test-case0-上的运行情况" class="headerlink" title="9.1 在 test_case0 上的运行情况"></a>9.1 在 test_case0 上的运行情况</h3><p>在 test_case0 上耗时 $2.844$ 秒完成推理，准确性指标为：</p>
+<ul>
+<li>每个GPS 定位点下估计的位置和真实位置的直线距离的平均值 <code>dist_error</code> ：$30.46$ 米</li>
+<li>方位角平均误差 <code>dir_error</code> ：$8.66\degree$ </li>
+<li>方位角平均误差小于 $15\degree$ 的比例 <code>dir_ratio</code> ： $92.6%$</li>
+</ul>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/test_case0.png" width="90%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 9.1</b> test_case0 上的预测点与实际定位点
+    <br />
+    <br />
+</div>
+
+
+<h3 id="9-2-在测试数据集上的运行情况"><a href="#9-2-在测试数据集上的运行情况" class="headerlink" title="9.2 在测试数据集上的运行情况"></a>9.2 在测试数据集上的运行情况</h3><p>在 10 个测试集上耗时 $28.30$ 秒完成推理，平均每个 $2.83$ 秒</p>
+<p>由于没有真实 GPS 数据，无法获得准确性指标。</p>
+<p>最后的结果保存于 <code>Result</code> 文件夹或 <code>TestSet</code> 文件夹中。</p>
+<h3 id="9-3-在收集数据集上的运行情况"><a href="#9-3-在收集数据集上的运行情况" class="headerlink" title="9.3 在收集数据集上的运行情况"></a>9.3 在收集数据集上的运行情况</h3><blockquote>
+<p>虽然数据集的时间跨度有区别，但是求取准确性指标的平均值时未纳入考虑</p>
+</blockquote>
+<p>在 51 个收集的行走数据集上耗时 $105$ 秒完成推理，平均每个 $2.06$ 秒，各数据集准确性指标的平均值为：</p>
+<ul>
+<li>每个GPS 定位点下估计的位置和真实位置的直线距离的平均值 <code>dist_error</code> ：$109.08$ 米</li>
+<li>方位角平均误差 <code>dir_error</code> ：$26.16\degree$ </li>
+<li>方位角平均误差小于 $15\degree$ 的比例 <code>dir_ratio</code> ： $50.2%$</li>
+<li>共 $15$ 个数据集上方位角平均误差小于 $15\degree$</li>
+<li>共 $3$ 个数据集上方位角平均误差小于 $15\degree$ 的比例大于 $90%$</li>
+</ul>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/walk.png" width="90%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 9.2</b> 其中一个步行数据集上的预测点与实际定位点
+    <br />
+    <br />
+</div>
+
+<p>在 17 个收集的骑行或跑步数据集上耗时 $24$ 秒完成推理，平均每个 $1.41$ 秒，各数据集准确性指标的平均值为：</p>
+<ul>
+<li>每个GPS 定位点下估计的位置和真实位置的直线距离的平均值 <code>dist_error</code> ：$113.52$ 米</li>
+<li>方位角平均误差 <code>dir_error</code> ：$27.06\degree$ </li>
+<li>方位角平均误差小于 $15\degree$ 的比例 <code>dir_ratio</code> ： $58.3%$</li>
+<li>共 $9$ 个数据集上方位角平均误差小于 $15\degree$</li>
+<li>共 $3$ 个数据集上方位角平均误差小于 $15\degree$ 的比例大于 $90%$</li>
+</ul>
+<div style="text-align: center;">
+    <img class="lazy" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAABGdBTUEAALGPC/xhBQAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAAaADAAQAAAABAAAAAQAAAADa6r/EAAAAC0lEQVQIHWNgAAIAAAUAAY27m/MAAAAASUVORK5CYII=" data-src="images/ride.png" width="90%" style="margin: 0 auto;" />
+</div>
+<div style="text-align: center; font-size: small">
+    <b>Figure 9.3</b> 其中一个骑行数据集上的预测点与实际定位点
+    <br />
+    <br />
+</div>
+
+
+<h2 id="十一、参考文献"><a href="#十一、参考文献" class="headerlink" title="十一、参考文献"></a>十一、参考文献</h2><ol>
+<li><p>Wang, Boyuan, Xuelin Liu, Baoguo Yu, Ruicai Jia, and Xingli Gan. 2018. “Pedestrian Dead Reckoning Based on Motion Mode Recognition Using a Smartphone” Sensors 18, no. 6: 1811. <a target="_blank" rel="noopener" href="https://doi.org/10.3390/s18061811">https://doi.org/10.3390/s18061811</a></p>
+</li>
+<li><p>Ladetto, Q. On foot navigation: Continuous step calibration using both complementary recursive prediction<br>and adaptive kalman filtering. In Proceedings of the 13th International Technical Meeting of the Satellite<br>Division of the Institute of Navigation, Salt Lake City, UT, USA, 19–22 September 2000; pp. 1735–1740.</p>
+</li>
+</ol>
+
+<div class="article-footer fs14">
+    <section id="license">
+      <div class="header"><span>许可协议</span></div>
+      <div class="body"><p>本文采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">署名-非商业性使用-相同方式共享 4.0 国际</a> 许可协议，转载请注明出处。</p>
+</div>
+    </section>
+    </div>
+</article>
+<div class="related-wrap" id="read-next"><section class="body"><div class="item" id="prev"></div><div class="item" id="next"><div class="note">较早文章</div><a href="/Fixer-itb/2024/08/24/hello-world/">Hello World</a></div></section></div>
+
+
+
+
+
+
+<footer class="page-footer footnote"><hr><div class="text"><p>本站由 <a href="/">Shawn Guy</a> 使用 <a target="_blank" rel="noopener" href="https://github.com/xaoxuu/hexo-theme-stellar/tree/1.29.1">Stellar 1.29.1</a> 主题创建。<br>本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4.0</a> 许可协议，转载请注明出处。</p>
+</div></footer>
+<div class="main-mask" onclick="sidebar.dismiss()"></div></div><aside class="l_right">
+<div class="widgets">
+
+
+
+<widget class="widget-wrapper toc" id="data-toc" collapse="false"><div class="widget-header dis-select"><span class="name">本文目录</span><a class="cap-action" onclick="sidebar.toggleTOC()" ><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg></a></div><div class="widget-body"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%AE%A4%E5%86%85%E8%A1%8C%E4%BA%BA%E7%A7%BB%E5%8A%A8%E6%96%B9%E4%BD%8D%E6%8E%A8%E7%AE%97%E6%8A%80%E6%9C%AF-Pedestrian-Dead-Reckoning-PDR"><span class="toc-text">室内行人移动方位推算技术 (Pedestrian Dead Reckoning, PDR)</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E9%97%AE%E9%A2%98%E6%8F%8F%E8%BF%B0"><span class="toc-text">一、问题描述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E9%97%AE%E9%A2%98%E8%83%8C%E6%99%AF"><span class="toc-text">1.1 问题背景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E8%BE%93%E5%85%A5"><span class="toc-text">1.2  输入</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E8%BE%93%E5%87%BA"><span class="toc-text">1.3 输出</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%95%B0%E6%8D%AE%E6%94%B6%E9%9B%86%E4%B8%8E%E5%A4%84%E7%90%86"><span class="toc-text">二、数据收集与处理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E6%95%B0%E6%8D%AE%E6%94%B6%E9%9B%86"><span class="toc-text">2.1 数据收集</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E6%95%B0%E6%8D%AE%E5%88%92%E5%88%86"><span class="toc-text">2.2 数据划分</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%80%BB%E4%BD%93%E6%80%9D%E8%B7%AF"><span class="toc-text">三、总体思路</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%89%8D%E6%9C%9F%E6%80%9D%E8%80%83"><span class="toc-text">3.1 前期思考</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%AE%9E%E7%8E%B0%E6%80%9D%E8%B7%AF"><span class="toc-text">3.2 实现思路</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E6%95%B0%E6%8D%AE%E9%A2%84%E5%A4%84%E7%90%86"><span class="toc-text">四、数据预处理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E7%BB%8F%E7%BA%AC%E5%BA%A6%E8%BD%AC%E6%8D%A2"><span class="toc-text">4.1 经纬度转换</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E6%9C%80%E8%BF%91%E9%82%BB%E6%8F%92%E5%80%BC%E5%AF%B9%E9%BD%90%E6%95%B0%E6%8D%AE"><span class="toc-text">4.2 最近邻插值对齐数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E5%AF%B9%E5%BA%94%E7%9A%84%E4%BB%A3%E7%A0%81%E4%BB%A5%E5%8F%8A-TestCase-%E6%8E%A5%E5%8F%A3"><span class="toc-text">4.3 对应的代码以及 TestCase 接口</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%AD%A5%E4%BC%90%E6%A3%80%E6%B5%8B"><span class="toc-text">五、步伐检测</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E8%84%9A%E6%AD%A5%E6%8F%90%E5%8F%96"><span class="toc-text">5.1 脚步提取</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#5-1-1-%E6%BB%A4%E6%B3%A2%E5%99%A8%E5%A4%84%E7%90%86"><span class="toc-text">5.1.1 滤波器处理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-1-2-%E6%AD%A5%E9%95%BF%E9%97%B4%E9%9A%94%E9%80%89%E6%8B%A9"><span class="toc-text">5.1.2 步长间隔选择</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-1-3-%E5%80%99%E9%80%89%E9%94%8B%E6%A3%80%E6%B5%8B"><span class="toc-text">5.1.3 候选锋检测</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E6%AD%A5%E5%B9%85%E4%BC%B0%E8%AE%A1"><span class="toc-text">5.2 步幅估计</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#5-21-%E9%80%9A%E8%BF%87%E6%AD%A5%E9%A2%91%E4%B8%8E%E5%8A%A0%E9%80%9F%E5%BA%A6%E9%9C%87%E8%8D%A1%E6%96%B9%E5%B7%AE%E6%9E%84%E5%BB%BA%E7%BA%BF%E6%80%A7%E5%9B%9E%E5%BD%92"><span class="toc-text">5.21 通过步频与加速度震荡方差构建线性回归</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-22-%E5%88%9D%E5%A7%8B%E5%B9%B2%E6%89%B0%E6%95%B0%E6%8D%AE%E7%9A%84%E6%B6%88%E9%99%A4"><span class="toc-text">5.22 初始干扰数据的消除</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#5-23-%E5%A4%9A%E5%AD%A6%E4%B9%A0%E5%99%A8%E7%9A%84%E7%BB%BC%E5%90%88"><span class="toc-text">5.23 多学习器的综合</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%96%B9%E5%90%91%E9%A2%84%E6%B5%8B"><span class="toc-text">六、方向预测</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E6%96%B9%E5%90%91%E9%A2%84%E6%B5%8B%E6%89%80%E9%9C%80%E6%95%B0%E6%8D%AE"><span class="toc-text">6.1 方向预测所需数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E4%BD%8E%E9%80%9A%E6%BB%A4%E6%B3%A2%E8%BF%87%E6%BB%A4%E6%89%8B%E6%9C%BA%E8%87%AA%E8%BA%AB%E6%8C%AF%E8%8D%A1"><span class="toc-text">6.2 低通滤波过滤手机自身振荡</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E7%A9%BA%E9%97%B4%E8%A7%A3%E6%9E%90%E5%87%A0%E4%BD%95%E9%A2%84%E6%B5%8B%E5%81%8F%E8%BD%AC%E8%A7%92%E5%BA%A6"><span class="toc-text">6.3 空间解析几何预测偏转角度</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4-%E4%BD%BF%E7%94%A8%E5%89%8D-10-%E7%9A%84%E6%95%B0%E6%8D%AE%E4%BC%98%E5%8C%96%E5%88%9D%E5%A7%8B%E6%96%B9%E5%90%91"><span class="toc-text">6.4 使用前 10% 的数据优化初始方向</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-5-%E9%81%87%E5%88%B0%E7%9A%84%E9%97%AE%E9%A2%98%E5%92%8C%E5%9B%B0%E9%9A%BE"><span class="toc-text">6.5 遇到的问题和困难</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%90%88%E5%B9%B6%E7%AE%97%E6%B3%95"><span class="toc-text">七、合并算法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E7%BB%9F%E5%90%88%E6%AD%A5%E4%BC%90%E9%A2%84%E6%B5%8B%E5%92%8C%E8%A7%92%E5%BA%A6%E9%A2%84%E6%B5%8B"><span class="toc-text">7.1 统合步伐预测和角度预测</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E7%BA%BF%E6%80%A7%E6%8F%92%E5%80%BC%E8%8E%B7%E5%8F%96%E6%9C%80%E7%BB%88%E9%A2%84%E6%B5%8B%E7%BB%93%E6%9E%9C"><span class="toc-text">7.2 线性插值获取最终预测结果</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E9%A1%B9%E7%9B%AE%E4%BB%A3%E7%A0%81"><span class="toc-text">八、项目代码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA"><span class="toc-text">8.1 环境搭建</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E4%BB%A3%E7%A0%81%E7%BB%93%E6%9E%84"><span class="toc-text">8.2 代码结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-%E8%BF%90%E8%A1%8C%E4%BB%A3%E7%A0%81"><span class="toc-text">8.3 运行代码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-4-%E6%89%A7%E8%A1%8C%E6%B5%8B%E8%AF%95"><span class="toc-text">8.4 执行测试</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95"><span class="toc-text">九、性能测试</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#9-1-%E5%9C%A8-test-case0-%E4%B8%8A%E7%9A%84%E8%BF%90%E8%A1%8C%E6%83%85%E5%86%B5"><span class="toc-text">9.1 在 test_case0 上的运行情况</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-2-%E5%9C%A8%E6%B5%8B%E8%AF%95%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8A%E7%9A%84%E8%BF%90%E8%A1%8C%E6%83%85%E5%86%B5"><span class="toc-text">9.2 在测试数据集上的运行情况</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-3-%E5%9C%A8%E6%94%B6%E9%9B%86%E6%95%B0%E6%8D%AE%E9%9B%86%E4%B8%8A%E7%9A%84%E8%BF%90%E8%A1%8C%E6%83%85%E5%86%B5"><span class="toc-text">9.3 在收集数据集上的运行情况</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%B8%80%E3%80%81%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="toc-text">十一、参考文献</span></a></li></ol></li></ol></div><div class="widget-footer">
+
+<a class="top" onclick="util.scrollTop()"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12c0-4.714 0-7.071 1.464-8.536C4.93 2 7.286 2 12 2c4.714 0 7.071 0 8.535 1.464C22 4.93 22 7.286 22 12c0 4.714 0 7.071-1.465 8.535C19.072 22 16.714 22 12 22s-7.071 0-8.536-1.465C2 19.072 2 16.714 2 12Z"/><path stroke-linecap="round" stroke-linejoin="round" d="m9 15.5l3-3l3 3m-6-4l3-3l3 3"/></g></svg><span>回到顶部</span></a></div></widget>
+</div></aside><div class='float-panel blur'>
+  <button type='button' style='display:none' class='laptop-only rightbar-toggle mobile' onclick='sidebar.rightbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6h11m-11 6h11m-11 6h11M4 6h1v4m-1 0h2m0 8H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>
+  </button>
+  <button type='button' style='display:none' class='mobile-only leftbar-toggle mobile' onclick='sidebar.leftbar()'>
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 11c0-3.771 0-5.657 1.172-6.828C4.343 3 6.229 3 10 3h4c3.771 0 5.657 0 6.828 1.172C22 5.343 22 7.229 22 11v2c0 3.771 0 5.657-1.172 6.828C19.657 21 17.771 21 14 21h-4c-3.771 0-5.657 0-6.828-1.172C2 18.657 2 16.771 2 13z"/><path id="sep" stroke-linecap="round" d="M5.5 10h6m-5 4h4m4.5 7V3"/></g></svg>
+  </button>
+</div>
+</div><div class="scripts">
+<script type="text/javascript">
+  const ctx = {
+    date_suffix: {
+      just: `刚刚`,
+      min: `分钟前`,
+      hour: `小时前`,
+      day: `天前`,
+    },
+    root : `/Fixer-itb/`,
+  };
+
+  // required plugins (only load if needs)
+  if (`local_search`) {
+    ctx.search = {};
+    ctx.search.service = `local_search`;
+    if (ctx.search.service == 'local_search') {
+      let service_obj = Object.assign({}, `{"field":"all","path":"/search.json","content":true,"sort":"-date"}`);
+      ctx.search[ctx.search.service] = service_obj;
+    }
+  }
+  const def = {
+    avatar: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/avatar/round/3442075.svg`,
+    cover: `https://gcore.jsdelivr.net/gh/cdn-x/placeholder@1.0.12/cover/76b86c0226ffd.svg`,
+  };
+  const deps = {
+    jquery: `https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js`,
+    marked: `https://cdn.jsdelivr.net/npm/marked@13.0.1/lib/marked.umd.min.js`
+  }
+  
+
+</script>
+
+<script type="text/javascript">
+  const utils = {
+    // 懒加载 css https://github.com/filamentgroup/loadCSS
+    css: (href, before, media, attributes) => {
+      var doc = window.document;
+      var ss = doc.createElement("link");
+      var ref;
+      if (before) {
+        ref = before;
+      } else {
+        var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+        ref = refs[refs.length - 1];
+      }
+      var sheets = doc.styleSheets;
+      if (attributes) {
+        for (var attributeName in attributes) {
+          if (attributes.hasOwnProperty(attributeName)) {
+            ss.setAttribute(attributeName, attributes[attributeName]);
+          }
+        }
+      }
+      ss.rel = "stylesheet";
+      ss.href = href;
+      ss.media = "only x";
+      function ready(cb) {
+        if (doc.body) {
+          return cb();
+        }
+        setTimeout(function () {
+          ready(cb);
+        });
+      }
+      ready(function () {
+        ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+      });
+      var onloadcssdefined = function (cb) {
+        var resolvedHref = ss.href;
+        var i = sheets.length;
+        while (i--) {
+          if (sheets[i].href === resolvedHref) {
+            return cb();
+          }
+        }
+        setTimeout(function () {
+          onloadcssdefined(cb);
+        });
+      };
+      function loadCB() {
+        if (ss.addEventListener) {
+          ss.removeEventListener("load", loadCB);
+        }
+        ss.media = media || "all";
+      }
+      if (ss.addEventListener) {
+        ss.addEventListener("load", loadCB);
+      }
+      ss.onloadcssdefined = onloadcssdefined;
+      onloadcssdefined(loadCB);
+      return ss;
+    },
+
+    js: (src, opt) => new Promise((resolve, reject) => {
+      var script = document.createElement('script');
+      if (src.startsWith('/')){
+        src = ctx.root + src.substring(1);
+      }
+      script.src = src;
+      if (opt) {
+        for (let key of Object.keys(opt)) {
+          script[key] = opt[key]
+        }
+      } else {
+        // 默认异步，如果需要同步，第二个参数传入 {} 即可
+        script.async = true
+      }
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    }),
+
+    jq: (fn) => {
+      if (typeof jQuery === 'undefined') {
+        utils.js(deps.jquery).then(fn)
+      } else {
+        fn()
+      }
+    },
+    
+    onLoading: (el) => {
+      if (el) {
+        $(el).append('<div class="loading-wrap"><svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" stroke-opacity=".3" d="M12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="1.3s" values="60;0"/></path><path stroke-dasharray="15" stroke-dashoffset="15" d="M12 3C16.9706 3 21 7.02944 21 12"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.3s" values="15;0"/><animateTransform attributeName="transform" dur="1.5s" repeatCount="indefinite" type="rotate" values="0 12 12;360 12 12"/></path></g></svg></div>');
+      }
+    },
+    onLoadSuccess: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap').remove();
+      }
+    },
+    onLoadFailure: (el) => {
+      if (el) {
+        $(el).find('.loading-wrap svg').remove();
+        $(el).find('.loading-wrap').append('<svg xmlns="http://www.w3.org/2000/svg" width="2em" height="2em" preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path stroke-dasharray="60" stroke-dashoffset="60" d="M12 3L21 20H3L12 3Z"><animate fill="freeze" attributeName="stroke-dashoffset" dur="0.5s" values="60;0"/></path><path stroke-dasharray="6" stroke-dashoffset="6" d="M12 10V14"><animate fill="freeze" attributeName="stroke-dashoffset" begin="0.6s" dur="0.2s" values="6;0"/></path></g><circle cx="12" cy="17" r="1" fill="currentColor" fill-opacity="0"><animate fill="freeze" attributeName="fill-opacity" begin="0.8s" dur="0.4s" values="0;1"/></circle></svg>');
+        $(el).find('.loading-wrap').addClass('error');
+      }
+    },
+    request: (el, url, callback, onFailure) => {
+      let retryTimes = 3;
+      utils.onLoading(el);
+      function req() {
+        return new Promise((resolve, reject) => {
+          let status = 0; // 0 等待 1 完成 2 超时
+          let timer = setTimeout(() => {
+            if (status === 0) {
+              status = 2;
+              timer = null;
+              reject('请求超时');
+              if (retryTimes == 0) {
+                onFailure();
+              }
+            }
+          }, 5000);
+          fetch(url).then(function(response) {
+            if (status !== 2) {
+              clearTimeout(timer);
+              resolve(response);
+              timer = null;
+              status = 1;
+            }
+            if (response.ok) {
+              return response.json();
+            }
+            throw new Error('Network response was not ok.');
+          }).then(function(data) {
+            retryTimes = 0;
+            utils.onLoadSuccess(el);
+            callback(data);
+          }).catch(function(error) {
+            if (retryTimes > 0) {
+              retryTimes -= 1;
+              setTimeout(() => {
+                req();
+              }, 5000);
+            } else {
+              utils.onLoadFailure(el);
+              onFailure();
+            }
+          });
+        });
+      }
+      req();
+    },
+  };
+</script>
+
+<script>
+  const sidebar = {
+    leftbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    rightbar: () => {
+      if (l_body) {
+        l_body.toggleAttribute('rightbar');
+        l_body.removeAttribute('leftbar');
+      }
+    },
+    dismiss: () => {
+      if (l_body) {
+        l_body.removeAttribute('leftbar');
+        l_body.removeAttribute('rightbar');
+      }
+    },
+    toggleTOC: () => {
+      document.querySelector('#data-toc').classList.toggle('collapse');
+    }
+  }
+</script>
+<script type="text/javascript">
+  (() => {
+    const tagSwitchers = document.querySelectorAll('.tag-subtree.parent-tag > a > .tag-switcher-wrapper')
+    for (const tagSwitcher of tagSwitchers) {
+      tagSwitcher.addEventListener('click', (e) => {
+        const parent = e.target.closest('.tag-subtree.parent-tag')
+        parent.classList.toggle('expanded')
+        e.preventDefault()
+      })
+    }
+
+    // Get active tag from query string, then activate it.
+    const urlParams = new URLSearchParams(window.location.search)
+    const activeTag = urlParams.get('tag')
+    if (activeTag) {
+      let tag = document.querySelector(`.tag-subtree[data-tag="${activeTag}"]`)
+      if (tag) {
+        tag.querySelector('a').classList.add('active')
+        
+        while (tag) {
+          tag.classList.add('expanded')
+          tag = tag.parentElement.closest('.tag-subtree.parent-tag')
+        }
+      }
+    }
+  })()
+</script>
+
+
+<!-- required -->
+<script src="/js/main.js?v=1.29.1" defer></script>
+
+<script type="text/javascript">
+  const applyTheme = (theme) => {
+    if (theme === 'auto') {
+      document.documentElement.removeAttribute('data-theme')
+    } else {
+      document.documentElement.setAttribute('data-theme', theme)
+    }
+
+    applyThemeToGiscus(theme)
+  }
+
+  const applyThemeToGiscus = (theme) => {
+    theme = theme === 'auto' ? 'preferred_color_scheme' : theme
+
+    const cmt = document.getElementById('giscus')
+    if (cmt) {
+      // This works before giscus load.
+      cmt.setAttribute('data-theme', theme)
+    }
+
+    const iframe = document.querySelector('#comments > section.giscus > iframe')
+    if (iframe) {
+      // This works after giscus loaded.
+      const src = iframe.src
+      const newSrc = src.replace(/theme=[\w]+/, `theme=${theme}`)
+      iframe.src = newSrc
+    }
+  }
+
+  const switchTheme = () => {
+    // light -> dark -> auto -> light -> ...
+    const currentTheme = document.documentElement.getAttribute('data-theme')
+    let newTheme;
+    switch (currentTheme) {
+      case 'light':
+        newTheme = 'dark'
+        break
+      case 'dark':
+        newTheme = 'auto'
+        break
+      default:
+        newTheme = 'light'
+    }
+    applyTheme(newTheme)
+    window.localStorage.setItem('Stellar.theme', newTheme)
+
+    const messages = {
+      light: `切换到浅色模式`,
+      dark: `切换到深色模式`,
+      auto: `切换到跟随系统配色`,
+    }
+    hud?.toast?.(messages[newTheme])
+  }
+
+  (() => {
+    // Apply user's preferred theme, if any.
+    const theme = window.localStorage.getItem('Stellar.theme')
+    if (theme !== null) {
+      applyTheme(theme)
+    }
+  })()
+</script>
+
+
+<!-- optional -->
+
+
+
+<script defer>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.services = Object.assign({}, JSON.parse(`{"mdrender":{"js":"/js/services/mdrender.js"},"siteinfo":{"js":"/js/services/siteinfo.js","api":null},"ghinfo":{"js":"/js/services/ghinfo.js"},"sites":{"js":"/js/services/sites.js"},"friends":{"js":"/js/services/friends.js"},"timeline":{"js":"/js/services/timeline.js"},"fcircle":{"js":"/js/services/fcircle.js"},"weibo":{"js":"/js/services/weibo.js"},"memos":{"js":"/js/services/memos.js"}}`));
+    for (let id of Object.keys(ctx.services)) {
+      const js = ctx.services[id].js;
+      if (id == 'siteinfo') {
+        ctx.cardlinks = document.querySelectorAll('a.link-card[cardlink]');
+        if (ctx.cardlinks?.length > 0) {
+          utils.js(js, { defer: true }).then(function () {
+            setCardLink(ctx.cardlinks);
+          });
+        }
+      } else {
+        const els = document.getElementsByClassName(`ds-${id}`);
+        if (els?.length > 0) {
+          utils.jq(() => {
+            if (id == 'timeline' || 'memos' || 'marked') {
+              utils.js(deps.marked).then(function () {
+                utils.js(js, { defer: true });
+              });
+            } else {
+              utils.js(js, { defer: true });
+            }
+          });
+        }
+      }
+    }
+  });
+</script>
+
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    ctx.search = {
+      path: `/search.json`,
+    }
+    utils.js('/js/search/local-search.js', { defer: true });
+  });
+</script><script>
+  window.FPConfig = {
+    delay: 0,
+    ignoreKeywords: [],
+    maxRPS: 5,
+    hoverDelay: 25
+  };
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/flying-pages@2/flying-pages.min.js"></script><script defer src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@19.1.3/dist/lazyload.min.js"></script>
+<script>
+  // https://www.npmjs.com/package/vanilla-lazyload
+  // Set the options globally
+  // to make LazyLoad self-initialize
+  window.lazyLoadOptions = {
+    elements_selector: ".lazy",
+  };
+  // Listen to the initialization event
+  // and get the instance of LazyLoad
+  window.addEventListener(
+    "LazyLoad::Initialized",
+    function (event) {
+      window.lazyLoadInstance = event.detail.instance;
+    },
+    false
+  );
+  document.addEventListener('DOMContentLoaded', function () {
+    window.lazyLoadInstance?.update();
+  });
+</script><script>
+  ctx.fancybox = {
+    selector: `.timenode p>img`,
+    css: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css`,
+    js: `https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js`
+  };
+  var selector = '[data-fancybox]:not(.error)';
+  if (ctx.fancybox.selector) {
+    selector += `, ${ctx.fancybox.selector}`
+  }
+  var needFancybox = document.querySelectorAll(selector).length !== 0;
+  if (!needFancybox) {
+    const els = document.getElementsByClassName('ds-memos');
+    if (els != undefined && els.length > 0) {
+      needFancybox = true;
+    }
+  }
+  if (needFancybox) {
+    utils.css(ctx.fancybox.css);
+    utils.js(ctx.fancybox.js, { defer: true }).then(function () {
+      Fancybox.bind(selector, {
+        hideScrollbar: false,
+        Thumbs: {
+          autoStart: false,
+        },
+        caption: (fancybox, slide) => {
+          return slide.triggerEl.alt || slide.triggerEl.dataset.caption || null
+        }
+      });
+    })
+  }
+</script>
+<script>
+  window.addEventListener('DOMContentLoaded', (event) => {
+    const swiper_api = document.getElementById('swiper-api');
+    if (swiper_api != undefined) {
+      utils.css(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.css`);
+      utils.js(`https://unpkg.com/swiper@10.3.1/swiper-bundle.min.js`, { defer: true }).then(function () {
+        const effect = swiper_api.getAttribute('effect') || '';
+        var swiper = new Swiper('.swiper#swiper-api', {
+          slidesPerView: 'auto',
+          spaceBetween: 8,
+          centeredSlides: true,
+          effect: effect,
+          rewind: true,
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          navigation: {
+            nextEl: '.swiper-button-next',
+            prevEl: '.swiper-button-prev',
+          },
+        });
+      })
+    }
+  });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    window.codeElements = document.querySelectorAll('.code');
+    if (window.codeElements.length > 0) {
+      ctx.copycode = {
+        default_text: `Copy`,
+        success_text: `Copied`,
+        toast: `复制成功`,
+      };
+      utils.js('/js/plugins/copycode.js');
+    }
+  });
+</script>
+
+
+<!-- inject -->
+
+</div></body></html>
